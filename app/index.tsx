@@ -5,6 +5,7 @@ import { navigate } from "expo-router/build/global-state/routing";
 import { Image } from "expo-image";
 import { View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import NetworkStatus from "@/components/ui/NetworkStatus";
 
 export default function Index() {
   const { user, logout } = useAuth();
@@ -16,9 +17,8 @@ export default function Index() {
 
   return (
     <View className="flex-1 bg-white">
-      {/* Top Bar with branding + logout */}
       <View className="flex-row items-center justify-between bg-white px-5 pt-14 pb-4">
-        {/* Branding: Logo + Name */}
+        <NetworkStatus />
         <View className="flex-row items-center gap-2">
           <Image
             source={require("@/assets/images/logo.png")}
@@ -30,7 +30,6 @@ export default function Index() {
           </Text>
         </View>
 
-        {/* Logout Button */}
         <Button
           className="h-10 flex-row items-center gap-2 rounded-xl bg-red-500 px-4"
           onPress={handleLogout}
@@ -40,7 +39,6 @@ export default function Index() {
         </Button>
       </View>
 
-      {/* Main Content */}
       <View className="flex-1 items-center justify-center px-6">
         <Text className="text-lg text-black">
           Welcome, {user?.full_name ?? "User"}!

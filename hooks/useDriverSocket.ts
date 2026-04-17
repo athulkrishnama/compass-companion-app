@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useAuth } from './useAuth';
 import { socketService } from '@/lib/socket';
-import { setError } from '@/store/slices/rideSlice';
+import { setError, setOnlineStatus } from '@/store/slices/rideSlice';
 import { RootState } from '@/store/store';
 
 /**
@@ -14,7 +14,7 @@ import { RootState } from '@/store/store';
  *   which accesses the shared socketService singleton.
  */
 export const useDriverSocket = () => {
-  const { user, token } = useAuth();
+  const { user, token, refreshToken, logout } = useAuth();
   const dispatch = useDispatch();
   const isOnline = useSelector((state: RootState) => state.ride.isOnline);
 
@@ -31,12 +31,32 @@ export const useDriverSocket = () => {
       dispatch(setError(errorData?.message || 'An unknown socket error occurred.'));
     };
 
+    const onDisconnect = async (reason: string) => {
+      console.log('[socket] hook detecting disconnect:', reason);
+      if (reason === 'io server disconnect') {
+        console.log('[socket] token likely expired. Attempting refresh...');
+        try {
+          // Token expired, refresh it!
+          // The new token will update the context, automatically triggering this useEffect
+          // to naturally reconnect to the socket.
+          await refreshToken();
+        } catch (error) {
+          console.error('[socket] failed to refresh token after socket drop:', error);
+          dispatch(setError('Session expired. Please log in again.'));
+          dispatch(setOnlineStatus(false));
+          logout();
+        }
+      }
+    };
+
     socket.on('error', onError);
+    socket.on('disconnect', onDisconnect);
 
     return () => {
       socket.off('error', onError);
+      socket.off('disconnect', onDisconnect);
     };
-  }, [isOnline, token]);
+  }, [isOnline, token, user?.id, refreshToken, dispatch, logout]);
 
   return {};
 };

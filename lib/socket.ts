@@ -23,6 +23,8 @@ class SocketService {
     this.socket = io(this.backendUrl, {
       query: { driverId },
       auth: { token },
+      // forceNew bypasses socket.io's URL multiplexing cache so new auth tokens apply safely
+      forceNew: true,
       // polling → websocket upgrade; avoids ping-timeout on Android emulator
       transports: ['polling', 'websocket'],
       reconnection: true,

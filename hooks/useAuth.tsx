@@ -11,6 +11,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (data: LoginResponse) => Promise<void>;
   logout: () => Promise<void>;
+  refreshToken: () => Promise<string>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -64,8 +65,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const refreshToken = useCallback(async () => {
+    try {
+      const { default: axiosInstance } = await import("@/axios/axiosInstance");
+      const response = await axiosInstance.post('/auth/refresh-token', {}, { withCredentials: true });
+      const newToken = response.data.data.accessToken;
+      
+      await AsyncStorage.setItem(AUTH_TOKEN_KEY, newToken);
+      setToken(newToken);
+      return newToken;
+    } catch (error) {
+      console.error("Failed to refresh token:", error);
+      logout();
+      throw error;
+    }
+  }, [logout]);
+
   return (
-    <AuthContext.Provider value={{ token, user, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ token, user, isLoading, login, logout, refreshToken }}>
       {children}
     </AuthContext.Provider>
   );

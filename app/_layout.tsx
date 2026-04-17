@@ -3,6 +3,8 @@ import { PortalHost } from "@rn-primitives/portal";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
+import { Provider } from "react-redux";
+import { store } from "@/store/store";
 import "./global.css";
 
 function RootNavigator() {
@@ -40,8 +42,10 @@ function RootNavigator() {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <RootNavigator />
-    </AuthProvider>
+    <Provider store={store}>
+      <AuthProvider>
+        <RootNavigator />
+      </AuthProvider>
+    </Provider>
   );
 }

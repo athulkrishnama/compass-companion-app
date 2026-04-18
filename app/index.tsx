@@ -1,22 +1,32 @@
-import { Button } from "@/components/ui/button";
-import { Text } from "@/components/ui/text";
+import React, { useEffect } from "react";
+import { View, Alert, ScrollView } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
+import { router } from "expo-router";
+
 import { useAuth } from "@/hooks/useAuth";
 import { useDriverSocket } from "@/hooks/useDriverSocket";
 import { useLocationTracking } from "@/hooks/useLocationTracking";
-import { navigate } from "expo-router/build/global-state/routing";
-import { Image } from "expo-image";
-import { View, Alert } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import NetworkStatus from "@/components/ui/NetworkStatus";
-import { useDispatch, useSelector } from "react-redux";
+import { useCabDetails } from "@/hooks/useCabDetails";
 import { RootState } from "@/store/store";
 import { setOnlineStatus } from "@/store/slices/rideSlice";
-import { useEffect } from "react";
+
+import { Header } from "@/components/home/Header";
+import { WelcomeSection } from "@/components/home/WelcomeSection";
+import { StatusCard } from "@/components/home/StatusCard";
+import { VehicleCard } from "@/components/home/VehicleCard";
+import { s } from "@/components/home/Home.styles";
 
 export default function Index() {
   const { user, logout } = useAuth();
   const dispatch = useDispatch();
   const isOnline = useSelector((state: RootState) => state.ride.isOnline);
+
+  const {
+    cabDetails,
+    loading: cabLoading,
+    error: cabError,
+    refetch,
+  } = useCabDetails();
 
   // Manages socket connection
   useDriverSocket();
@@ -30,12 +40,12 @@ export default function Index() {
       Alert.alert("Location Error", locationError);
       dispatch(setOnlineStatus(false));
     }
-  }, [locationError]);
+  }, [locationError, dispatch]);
 
   const handleLogout = () => {
     if (isOnline) dispatch(setOnlineStatus(false));
     logout();
-    navigate("/login");
+    router.replace("/login");
   };
 
   const toggleOnline = () => {
@@ -43,49 +53,25 @@ export default function Index() {
   };
 
   return (
-    <View className="flex-1 bg-white">
-      <View className="flex-row items-center justify-between bg-white px-5 pt-14 pb-4">
-        <NetworkStatus />
-        <View className="flex-row items-center gap-2">
-          <Image
-            source={require("@/assets/images/logo.png")}
-            style={{ width: 36, height: 36 }}
-            contentFit="contain"
-          />
-          <Text className="text-xl font-bold tracking-wide text-black">
-            Compass
-          </Text>
-        </View>
+    <View style={s.root}>
+      <Header onLogout={handleLogout} />
 
-        <Button
-          className="h-10 flex-row items-center gap-2 rounded-xl bg-red-500 px-4"
-          onPress={handleLogout}
-        >
-          <Ionicons name="log-out-outline" size={18} color="#fff" />
-          <Text className="text-sm font-semibold text-white">Logout</Text>
-        </Button>
-      </View>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={s.scroll}
+        showsVerticalScrollIndicator={false}
+      >
+        <WelcomeSection fullName={user?.full_name} />
 
-      <View className="flex-1 items-center justify-center px-6 gap-4">
-        <Text className="text-lg text-black">
-          Welcome, {user?.full_name ?? "User"}!
-        </Text>
+        <StatusCard isOnline={isOnline} onToggle={toggleOnline} />
 
-        <Text
-          className={`text-sm font-semibold ${isOnline ? "text-green-600" : "text-gray-400"}`}
-        >
-          {isOnline ? "● ONLINE — Sharing Location" : "○ OFFLINE"}
-        </Text>
-
-        <Button
-          className={`h-14 w-48 rounded-2xl ${isOnline ? "bg-red-500" : "bg-green-600"}`}
-          onPress={toggleOnline}
-        >
-          <Text className="text-base font-bold text-white">
-            {isOnline ? "Go Offline" : "Go Online"}
-          </Text>
-        </Button>
-      </View>
+        <VehicleCard
+          loading={cabLoading}
+          error={cabError}
+          cabDetails={cabDetails}
+          onRefresh={refetch}
+        />
+      </ScrollView>
     </View>
   );
 }

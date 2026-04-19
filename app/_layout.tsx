@@ -6,6 +6,7 @@ import { ActivityIndicator, View } from "react-native";
 import { Provider } from "react-redux";
 import { store } from "@/store/store";
 import "./global.css";
+import "@/lib/locationTask";
 
 function RootNavigator() {
   const { user, isLoading } = useAuth();

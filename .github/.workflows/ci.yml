@@ -1,0 +1,83 @@
+name: Expo Build & Notify Slack
+
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
+
+      - name: Start Expo Build
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          eas build \
+            --platform android \
+            --profile preview \
+            --non-interactive \
+            --json > build.json
+
+      - name: Extract Build URL
+        id: build
+        run: |
+          BUILD_URL=$(cat build.json | jq -r '.[0].artifacts.buildUrl')
+          echo "url=$BUILD_URL" >> $GITHUB_OUTPUT
+
+      - name: Send Slack Notification
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data '{
+            "username": "Expo Build Bot",
+            "icon_emoji": ":robot_face:",
+            "text": " New Expo Build Ready!",
+            "blocks": [
+              {
+                "type": "header",
+                "text": {
+                  "type": "plain_text",
+                  "text": "New Expo Preview Build Ready!",
+                  "emoji": true
+                }
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*Project:* Compass Companion\n*Platform:* Android\n*Branch:* ${{ github.ref_name }}"
+                }
+              },
+              {
+                "type": "actions",
+                "elements": [
+                  {
+                    "type": "button",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "📲 Download APK",
+                      "emoji": true
+                    },
+                    "style": "primary",
+                    "url": "${{ steps.build.outputs.url }}"
+                  }
+                ]
+              }
+            ]
+          }' \
+          ${{ secrets.SLACK_WEBHOOK_URL }}

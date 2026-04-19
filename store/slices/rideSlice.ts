@@ -1,15 +1,18 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { Vehicle } from '@/types/cab';
 
 interface RideState {
   isOnline: boolean;
   error: string | null;
   rideId: string | null;
+  vehicleDetails: Vehicle | null;
 }
 
 const initialState: RideState = {
   isOnline: false,
   error: null,
   rideId: null,
+  vehicleDetails: null,
 };
 
 const rideSlice = createSlice({
@@ -25,9 +28,12 @@ const rideSlice = createSlice({
     setRideId(state, action: PayloadAction<string | null>) {
       state.rideId = action.payload;
     },
+    setVehicleDetails(state, action: PayloadAction<Vehicle | null>) {
+      state.vehicleDetails = action.payload;
+    },
   },
 });
 
-export const { setOnlineStatus, setError, setRideId } = rideSlice.actions;
+export const { setOnlineStatus, setError, setRideId, setVehicleDetails } = rideSlice.actions;
 
 export default rideSlice.reducer;

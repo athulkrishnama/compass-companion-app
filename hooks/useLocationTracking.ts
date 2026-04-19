@@ -2,11 +2,14 @@ import { useEffect, useState } from 'react';
 import * as Location from 'expo-location';
 import { LOCATION_TASK_NAME } from '@/lib/locationTask';
 import { socketService } from '@/lib/socket';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store/store';
 
 
 export const useLocationTracking = (isOnline: boolean) => {
   const [hasPermissions, setHasPermissions] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const vehicleDetails = useSelector((state: RootState) => state.ride.vehicleDetails);
 
   useEffect(() => {
     (async () => {
@@ -34,7 +37,12 @@ export const useLocationTracking = (isOnline: boolean) => {
     let foregroundInterval: ReturnType<typeof setInterval>;
 
     const startTracking = async () => {
-      if (!hasPermissions) return;
+      if (!hasPermissions || !vehicleDetails) {
+        if (!vehicleDetails && isOnline) {
+           console.warn('[location] Cannot start tracking without vehicle details');
+        }
+        return;
+      }
 
       try {
         const alreadyRunning = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
@@ -56,6 +64,11 @@ export const useLocationTracking = (isOnline: boolean) => {
 
         foregroundInterval = setInterval(async () => {
           try {
+            if (!vehicleDetails) {
+              console.warn('[interval] Vehicle details missing, skipping emit');
+              return;
+            }
+
             const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
             if (loc) {
               const payload = {
@@ -64,7 +77,7 @@ export const useLocationTracking = (isOnline: boolean) => {
                   longitude: loc.coords.longitude,
                 },
                 heading: loc.coords.heading ?? 0,
-                vehicle_type: 'SUV',
+                vehicle_type: vehicleDetails.type,
               };
               socketService.emit('location:update', payload);
               console.log('[interval] emitting location:update', payload.coordinates);
@@ -105,7 +118,7 @@ export const useLocationTracking = (isOnline: boolean) => {
     return () => {
       stopTracking();
     };
-  }, [isOnline, hasPermissions]);
+  }, [isOnline, hasPermissions, vehicleDetails]);
 
   return { hasPermissions, errorMsg };
 };

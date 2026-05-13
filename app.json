@@ -20,7 +20,8 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.athulkrishnama.compasscompanionapp"
+      "package": "com.athulkrishnama.compasscompanionapp",
+      "usesCleartextTraffic": true
     },
     "web": {
       "output": "static",

@@ -77,7 +77,7 @@ export default function LoginForm() {
         error.response?.data?.message ||
         error.message ||
         "Something went wrong.";
-      Alert.alert("Login Failed", message);
+      Alert.alert("Login Failed", message + process.env.EXPO_PUBLIC_BACKEND_URL);
     } finally {
       setLoading(false);
     }

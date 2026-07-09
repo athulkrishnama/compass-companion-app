@@ -1,12 +1,15 @@
 import React, { useEffect } from "react";
-import { View, Alert, ScrollView } from "react-native";
+import { View, Alert, ScrollView, Text } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useDriverSocket } from "@/hooks/useDriverSocket";
 import { useLocationTracking } from "@/hooks/useLocationTracking";
 import { useCabDetails } from "@/hooks/useCabDetails";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { VERIFICATION_STATUS } from "@/types/auth";
 import { RootState } from "@/store/store";
 import { setOnlineStatus } from "@/store/slices/rideSlice";
 
@@ -28,11 +31,28 @@ export default function Index() {
     refetch,
   } = useCabDetails();
 
+  const {
+    profile,
+    loading: profileLoading,
+    error: profileError,
+  } = useUserProfile();
+
+  const isBlocked = profile?.is_blocked === true;
+  const isNotVerified = profile ? profile.is_verified !== VERIFICATION_STATUS.APPROVED : false;
+  const cantGoOnline = isBlocked || isNotVerified;
+
+  // We should force offline if they are online but not allowed
+  useEffect(() => {
+    if (cantGoOnline && isOnline) {
+      dispatch(setOnlineStatus(false));
+    }
+  }, [cantGoOnline, isOnline, dispatch]);
+
   // Manages socket connection
   useDriverSocket();
 
   // Manages background location task + emitting
-  const { errorMsg: locationError } = useLocationTracking(isOnline);
+  const { errorMsg: locationError } = useLocationTracking(isOnline && !cantGoOnline);
 
   // Show location errors as alerts
   useEffect(() => {
@@ -49,6 +69,14 @@ export default function Index() {
   };
 
   const toggleOnline = () => {
+    if (cantGoOnline) {
+      if (isBlocked) {
+        Alert.alert("Account Blocked", "Your account has been blocked by the admin.");
+      } else if (isNotVerified) {
+        Alert.alert("Verification Pending", "Your account is not yet approved.");
+      }
+      return;
+    }
     dispatch(setOnlineStatus(!isOnline));
   };
 
@@ -62,6 +90,22 @@ export default function Index() {
         showsVerticalScrollIndicator={false}
       >
         <WelcomeSection fullName={user?.full_name} />
+
+        {cantGoOnline && (
+          <View style={[s.card, { marginBottom: 16, backgroundColor: "#111" }]}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 }}>
+              <Ionicons name="alert-circle" size={20} color="#fff" />
+              <Text style={{ fontSize: 16, fontWeight: "800", color: "#fff" }}>
+                {isBlocked ? "Account Blocked" : "Verification Pending"}
+              </Text>
+            </View>
+            <Text style={{ fontSize: 13, color: "#aaa", lineHeight: 18 }}>
+              {isBlocked 
+                ? "Your account has been blocked by the admin. You cannot go online or accept rides." 
+                : "Your account is pending verification. You cannot go online until approved."}
+            </Text>
+          </View>
+        )}
 
         <StatusCard isOnline={isOnline} onToggle={toggleOnline} />
 

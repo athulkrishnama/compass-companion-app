@@ -20,3 +20,9 @@ export interface LoginResponse {
     role: ROLE;
   };
 }
+
+export enum VERIFICATION_STATUS {
+  PENDING = "PENDING",
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED",
+}

@@ -92,14 +92,14 @@ export default function Index() {
         <WelcomeSection fullName={user?.full_name} />
 
         {cantGoOnline && (
-          <View style={[s.card, { marginBottom: 16, backgroundColor: "#111" }]}>
+          <View style={[s.card, { marginBottom: 16 }]}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 }}>
-              <Ionicons name="alert-circle" size={20} color="#fff" />
-              <Text style={{ fontSize: 16, fontWeight: "800", color: "#fff" }}>
+              <Ionicons name="alert-circle" size={20} color="#111" />
+              <Text style={{ fontSize: 16, fontWeight: "800", color: "#111" }}>
                 {isBlocked ? "Account Blocked" : "Verification Pending"}
               </Text>
             </View>
-            <Text style={{ fontSize: 13, color: "#aaa", lineHeight: 18 }}>
+            <Text style={{ fontSize: 13, color: "#555", lineHeight: 18 }}>
               {isBlocked 
                 ? "Your account has been blocked by the admin. You cannot go online or accept rides." 
                 : "Your account is pending verification. You cannot go online until approved."}
@@ -107,7 +107,7 @@ export default function Index() {
           </View>
         )}
 
-        <StatusCard isOnline={isOnline} onToggle={toggleOnline} />
+        <StatusCard isOnline={isOnline} onToggle={toggleOnline} disabled={cantGoOnline} />
 
         <VehicleCard
           loading={cabLoading}

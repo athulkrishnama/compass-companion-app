@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
+import { useFocusEffect } from "expo-router";
 import axiosInstance from "@/axios/axiosInstance";
 import { HttpResponse } from "@/types/auth";
-import { VERIFICATION_STATUS } from "@/types/auth"; // Need to update types/auth.ts to include this
+import { VERIFICATION_STATUS } from "@/types/auth"; 
 
 export interface IGetUserProfileResponseDTO {
   id: string;
@@ -28,6 +29,7 @@ export function useUserProfile() {
     try {
       const res = await axiosInstance.get<HttpResponse<IGetUserProfileResponseDTO>>("/auth/profile");
       if (res.data.success && res.data.data) {
+        console.log(res.data)
         setProfile(res.data.data);
       } else {
         setError(res.data.message ?? "Failed to load user profile.");
@@ -40,9 +42,11 @@ export function useUserProfile() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchProfile();
+    }, [fetchProfile])
+  );
 
   return { profile, loading, error, refetchProfile: fetchProfile };
 }

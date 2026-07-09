@@ -8,11 +8,12 @@ import { RootState } from "@/store/store";
 interface StatusCardProps {
   isOnline: boolean;
   onToggle: () => void;
+  disabled?: boolean;
 }
 
-export const StatusCard: React.FC<StatusCardProps> = ({ isOnline, onToggle }) => {
+export const StatusCard: React.FC<StatusCardProps> = ({ isOnline, onToggle, disabled }) => {
   const vehicleDetails = useSelector((state: RootState) => state.ride.vehicleDetails);
-  const isDisabled = !vehicleDetails && !isOnline;
+  const isDisabled = disabled || (!vehicleDetails && !isOnline);
 
   return (
     <View style={s.statusCardRow}>

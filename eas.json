@@ -8,13 +8,13 @@
       "developmentClient": true,
       "distribution": "internal",
       "env":{
-        "EXPO_PUBLIC_BACKEND_URL":"http://localhost:4000/api/v1"
+        "EXPO_PUBLIC_BACKEND_URL":"https://api.compass.athulkrishnama.online/api/v1"
       }
     },
     "preview": {
       "distribution": "internal",
       "env":{
-        "EXPO_PUBLIC_BACKEND_URL":"http://localhost:4000/api/v1"
+        "EXPO_PUBLIC_BACKEND_URL":"https://api.compass.athulkrishnama.online/api/v1"
       }
     },
     "production": {
